@@ -39,6 +39,7 @@ disable_glibc_option = get_option('disable_glibc_option')
 disable_crypt_option = get_option('disable_crypt_option')
 disable_bsd_option = get_option('disable_bsd_option')
 disable_libgcc_dependency = get_option('disable_libgcc_dependency')
+mos_kernel_headers = get_option('mos_kernel_headers')
 internal_conf = configuration_data()
 mlibc_conf = configuration_data()
 
@@ -256,6 +257,26 @@ elif host_machine.system() == 'dripos'
 	rtld_include_dirs += include_directories('sysdeps/dripos/include')
 	libc_include_dirs += include_directories('sysdeps/dripos/include')
 	subdir('sysdeps/dripos')
+elif host_machine.system() == 'mos'
+    disable_linux_option = true
+    rtdl_include_dirs += include_directories('sysdeps/mos/include')
+    libc_include_dirs += include_directories('sysdeps/mos/include')
+
+    if mos_kernel_headers == ''
+        message('mos_kernel_headers is not set, defaulting to /usr/x86_64-mos/include')
+        mos_kernel_headers = '/usr/x86_64-mos/include'
+    endif
+
+    if not fs.is_dir(mos_kernel_headers)
+        error('mos_kernel_headers is not set to a valid path')
+    endif
+
+    rtdl_include_dirs += include_directories(mos_kernel_headers)
+    libc_include_dirs += include_directories(mos_kernel_headers)
+
+    subdir('sysdeps/mos')
+    internal_conf.set10('MLIBC_MAP_DSO_SEGMENTS', true)
+    internal_conf.set10('MLIBC_MAP_FILE_WINDOWS', true)
 else
 	error('No sysdeps defined for OS: ' + host_machine.system())
 endif
