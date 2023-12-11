@@ -1,0 +1,14 @@
+[binaries]
+c = 'x86_64-mos-gcc'
+cpp = 'x86_64-mos-g++'
+ar = 'x86_64-mos-ar'
+strip = 'x86_64-mos-strip'
+
+[properties]
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'mos'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'

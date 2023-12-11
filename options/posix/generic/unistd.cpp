@@ -625,6 +625,8 @@ long pathconf(const char *, int name) {
 	switch (name) {
 	case _PC_NAME_MAX:
 		return NAME_MAX;
+	case _PC_PATH_MAX:
+		return PATH_MAX;
 	default:
 		mlibc::infoLogger() << "missing pathconf() entry " << name << frg::endlog;
 		errno = EINVAL;

@@ -31,6 +31,7 @@ library_type = get_option('default_library')
 build_tests = get_option('build_tests')
 build_tests_host_libc = get_option('build_tests_host_libc')
 libgcc_dependency = get_option('libgcc_dependency')
+mos_kernel_headers = get_option('mos_kernel_headers')
 internal_conf = configuration_data()
 mlibc_conf = configuration_data()
 
@@ -182,6 +183,10 @@ if default_library_paths.length() == 0
 	else
 		default_library_paths = ['/lib', '/usr/lib']
 	endif
+
+	if target_machine.system() == 'mos'
+		default_library_paths += ['/data/lib']
+	endif
 endif
 
 internal_conf.set_quoted('MLIBC_SYSTEM_NAME', host_machine.system())
@@ -272,6 +277,26 @@ elif host_machine.system() == 'nyaux'
 	rtld_include_dirs += include_directories('sysdeps/nyaux/include')
 	libc_include_dirs += include_directories('sysdeps/nyaux/include')
 	subdir('sysdeps/nyaux')
+elif host_machine.system() == 'mos'
+    disable_linux_option = false # MOS needs Linux sysdeps
+    rtld_include_dirs += include_directories('sysdeps/mos/include')
+    libc_include_dirs += include_directories('sysdeps/mos/include')
+
+    if mos_kernel_headers == ''
+        message('mos_kernel_headers is not set, defaulting to /opt/' + host_machine.cpu_family() + '-mos/include')
+        mos_kernel_headers = '/opt/' + host_machine.cpu_family() + '-mos/include'
+    endif
+
+    if not fs.is_dir(mos_kernel_headers)
+        error('mos_kernel_headers is not set to a valid path')
+    endif
+
+    rtld_include_dirs += include_directories(mos_kernel_headers)
+    libc_include_dirs += include_directories(mos_kernel_headers)
+
+    internal_conf.set10('MLIBC_MAP_DSO_SEGMENTS', true)
+    internal_conf.set10('MLIBC_MAP_FILE_WINDOWS', true)
+    subdir('sysdeps/mos')
 else
 	error('No sysdeps defined for OS: ' + host_machine.system())
 endif
