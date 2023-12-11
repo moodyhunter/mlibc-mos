@@ -1,3 +1,4 @@
+.cache/
 /subprojects/*
 !/subprojects/*.wrap
 *.xbstrap

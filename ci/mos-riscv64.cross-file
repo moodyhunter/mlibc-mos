@@ -1,0 +1,14 @@
+[binaries]
+c = 'riscv64-mos-gcc'
+cpp = 'riscv64-mos-g++'
+ar = 'riscv64-mos-ar'
+strip = 'riscv64-mos-strip'
+
+[properties]
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'mos'
+cpu_family = 'riscv64'
+cpu = 'riscv64'
+endian = 'little'
