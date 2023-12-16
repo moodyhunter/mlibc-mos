@@ -151,7 +151,10 @@ namespace mlibc
 
     int sys_futex_wake(int *pointer)
     {
-        return syscall_futex_wake(pointer, INT_MAX);
+        long ret = syscall_futex_wake(pointer, INT_MAX);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
+        return 0;
     }
 
     int sys_anon_allocate(size_t size, void **pointer)
