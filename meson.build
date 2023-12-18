@@ -263,8 +263,8 @@ elif host_machine.system() == 'mos'
     libc_include_dirs += include_directories('sysdeps/mos/include')
 
     if mos_kernel_headers == ''
-        message('mos_kernel_headers is not set, defaulting to /usr/x86_64-mos/include')
-        mos_kernel_headers = '/usr/x86_64-mos/include'
+        message('mos_kernel_headers is not set, defaulting to /opt/x86_64-mos/include')
+        mos_kernel_headers = '/opt/x86_64-mos/include'
     endif
 
     if not fs.is_dir(mos_kernel_headers)
