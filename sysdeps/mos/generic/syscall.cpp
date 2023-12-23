@@ -22,6 +22,7 @@
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/select.h>
 #include <unistd.h>
 
@@ -82,15 +83,13 @@ static open_flags get_open_flags(int flags, int mode)
     else if (accmode == O_EXEC)
         mos_flags |= OPEN_EXECUTE;
     else if (accmode == O_SEARCH)
-    {
         mlibc::infoLogger() << "O_SEARCH is not supported" << frg::endlog;
-        // TODO: handle O_SEARCH
-    }
 
     if (mode & O_APPEND)
         mos_flags |= OPEN_APPEND;
+
     if (mode & O_CLOEXEC)
-        ; // TODO: close on exec
+        mlibc::infoLogger() << "O_CLOEXEC is not supported" << frg::endlog;
 
     if (flags & O_DIRECTORY)
         mos_flags |= OPEN_DIR;
@@ -128,8 +127,10 @@ namespace mlibc
         syscall_io_write(FD_err, buf, len + 1);
     }
 
-    [[__noreturn__]] void sys_libc_panic()
+    void sys_libc_panic()
     {
+        const auto msg = "\033[1;31mPANIC\033[0m: libc has encountered a fatal error.\n";
+        syscall_io_write(FD_err, msg, strlen(msg));
         syscall_exit(-1);
     }
 
@@ -146,7 +147,11 @@ namespace mlibc
 
     int sys_futex_wait(int *pointer, int expected, const struct timespec *time)
     {
-        return syscall_futex_wait(pointer, expected);
+        long ret = syscall_futex_wait(pointer, expected);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
+
+        return 0;
     }
 
     int sys_futex_wake(int *pointer)
@@ -161,7 +166,7 @@ namespace mlibc
     {
         long ptr = (long) syscall_mmap_anonymous(0, size, MEM_PERM_READ | MEM_PERM_WRITE, MMAP_PRIVATE);
         if (IS_ERR_VALUE(ptr))
-            return -1;
+            return -ptr;
 
         *pointer = (void *) ptr;
         return 0;
@@ -226,7 +231,10 @@ namespace mlibc
         else if (whence == SEEK_HOLE)
             *new_offset = syscall_io_seek(fd, offset, IO_SEEK_HOLE);
         else
+        {
+            mlibc::infoLogger() << "sys_seek: Invalid whence: " << whence << frg::endlog;
             return 1;
+        }
         return 0;
     }
 
@@ -251,7 +259,9 @@ namespace mlibc
                 return -ret;
         }
         else
+        {
             return EINVAL;
+        }
 
         const auto mode = [&]()
         {
@@ -265,23 +275,23 @@ namespace mlibc
             else
                 mode |= S_IFSOCK;
 
-            if (mos_stat.perm & (PERM_OWNER | PERM_READ))
+            if (mos_stat.perm & (PERM_OWNER & PERM_READ))
                 mode |= S_IRUSR;
-            if (mos_stat.perm & (PERM_OWNER | PERM_WRITE))
+            if (mos_stat.perm & (PERM_OWNER & PERM_WRITE))
                 mode |= S_IWUSR;
-            if (mos_stat.perm & (PERM_OWNER | PERM_EXEC))
+            if (mos_stat.perm & (PERM_OWNER & PERM_EXEC))
                 mode |= S_IXUSR;
-            if (mos_stat.perm & (PERM_GROUP | PERM_READ))
+            if (mos_stat.perm & (PERM_GROUP & PERM_READ))
                 mode |= S_IRGRP;
-            if (mos_stat.perm & (PERM_GROUP | PERM_WRITE))
+            if (mos_stat.perm & (PERM_GROUP & PERM_WRITE))
                 mode |= S_IWGRP;
-            if (mos_stat.perm & (PERM_GROUP | PERM_EXEC))
+            if (mos_stat.perm & (PERM_GROUP & PERM_EXEC))
                 mode |= S_IXGRP;
-            if (mos_stat.perm & (PERM_OTHER | PERM_READ))
+            if (mos_stat.perm & (PERM_OTHER & PERM_READ))
                 mode |= S_IROTH;
-            if (mos_stat.perm & (PERM_OTHER | PERM_WRITE))
+            if (mos_stat.perm & (PERM_OTHER & PERM_WRITE))
                 mode |= S_IWOTH;
-            if (mos_stat.perm & (PERM_OTHER | PERM_EXEC))
+            if (mos_stat.perm & (PERM_OTHER & PERM_EXEC))
                 mode |= S_IXOTH;
             if (mos_stat.sgid)
                 mode |= S_ISGID;
@@ -289,7 +299,6 @@ namespace mlibc
                 mode |= S_ISUID;
             if (mos_stat.sticky)
                 mode |= S_ISVTX;
-
             return mode;
         }();
 
@@ -315,16 +324,19 @@ namespace mlibc
 
     int sys_vm_map(void *hint, size_t size, int prot, int flags, int fd, off_t offset, void **window)
     {
+        const auto mmap_prot = get_mmap_prot(prot);
+        const auto mmap_flags = get_mmap_flags(flags);
+
         if (flags & MAP_ANONYMOUS)
         {
-            void *ptr = syscall_mmap_anonymous((ptr_t) hint, size, get_mmap_prot(prot), get_mmap_flags(flags));
+            void *ptr = syscall_mmap_anonymous((ptr_t) hint, size, mmap_prot, mmap_flags);
             if (window)
                 *window = ptr;
             return ptr ? 0 : -1;
         }
         else
         {
-            void *ptr = syscall_mmap_file((ptr_t) hint, size, get_mmap_prot(prot), get_mmap_flags(flags), fd, offset);
+            void *ptr = syscall_mmap_file((ptr_t) hint, size, mmap_prot, mmap_flags, fd, offset);
             if (window)
                 *window = ptr;
             return ptr ? 0 : -1;
@@ -343,27 +355,14 @@ namespace mlibc
         return !syscall_vm_protect(pointer, size, mos_prot);
     }
 
-    [[__noreturn__]] void sys_exit(int status)
+    void sys_exit(int status)
     {
         syscall_exit(status);
     }
 
-    [[__noreturn__, gnu::weak]] void sys_thread_exit()
+    void sys_thread_exit()
     {
         syscall_thread_exit();
-    }
-
-    int sys_prepare_stack(void **stack, void *entry, void *user_arg, void *tcb, size_t *stack_size, size_t *guard_size)
-    {
-        mlibc::infoLogger() << "stub sys_prepare_stack: " << stack << ", " << entry << ", " << user_arg << ", " << tcb << ", " << stack_size << ", " << guard_size
-                            << frg::endlog;
-        return 0;
-    }
-
-    int sys_clone(void *tcb, pid_t *pid_out, void *stack)
-    {
-        mlibc::infoLogger() << "stub sys_clone: " << tcb << ", " << pid_out << ", " << stack << frg::endlog;
-        return 0;
     }
 
     int sys_flock(int fd, int options)
@@ -401,33 +400,6 @@ namespace mlibc
         return 0;
     }
 
-    int sys_read_entries(int handle, void *buffer, size_t max_size, size_t *bytes_read)
-    {
-#ifndef MLIBC_BUILDING_RTDL
-        dir_entry_t next;
-        size_t offset = 0;
-
-        *bytes_read = syscall_io_read(handle, &next, sizeof(next));
-
-        dirent *dir = (dirent *) buffer;
-        strcpy(dir->d_name, next.name);
-        dir->d_ino = next.ino;
-        dir->d_off = offset;
-        dir->d_type = [&](auto type)
-        {
-            switch (type)
-            {
-                case FILE_TYPE_REGULAR: return DT_REG;
-                case FILE_TYPE_DIRECTORY: return DT_DIR;
-                case FILE_TYPE_SYMLINK: return DT_LNK;
-                default: return DT_UNKNOWN;
-            }
-        }(next.type);
-        dir->d_reclen = sizeof(dirent);
-#endif
-        return 0;
-    }
-
     int sys_write(int fd, const void *buf, size_t count, ssize_t *bytes_written)
     {
         *bytes_written = syscall_io_write(fd, buf, count);
@@ -442,7 +414,13 @@ namespace mlibc
 
     int sys_clock_get(int clock, time_t *secs, long *nanos)
     {
-        mlibc::infoLogger() << "stub sys_clock_get: " << clock << frg::endlog;
+        struct timespec ts;
+        long ret = syscall_clock_gettimeofday(&ts);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
+
+        *secs = ts.tv_sec;
+        *nanos = ts.tv_nsec;
         return 0;
     }
 
@@ -729,19 +707,6 @@ namespace mlibc
     {
         return 0;
     }
-
-#ifndef MLIBC_BUILDING_RTDL
-    int sys_uname(struct utsname *buf)
-    {
-        strcpy(buf->sysname, "MOS");
-        strcpy(buf->nodename, "MOS");
-        strcpy(buf->release, "0.0.1");
-        strcpy(buf->version, "0.0.1");
-        strcpy(buf->machine, "x86_64");
-        strcpy(buf->domainname, "");
-        return 0;
-    }
-#endif
 
     int sys_access(const char *path, int mode)
     {

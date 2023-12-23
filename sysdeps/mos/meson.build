@@ -4,7 +4,9 @@ rtdl_sources += files(
 
 libc_sources += files(
 	'generic/syscall.cpp',
-	'generic/entry.cpp'
+	'generic/entry.cpp',
+	'generic/syscall_libc.cpp',
+	'x86_64/thread_entry.S'
 )
 
 if not no_headers
