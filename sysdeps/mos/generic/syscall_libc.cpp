@@ -5,6 +5,7 @@
 #include "bits/ensure.h"
 #include "mlibc/ansi-sysdeps.hpp"
 #include "mlibc/internal-sysdeps.hpp"
+#include "mlibc/posix-sysdeps.hpp"
 #include "mlibc/tcb.hpp"
 #include "mos/filesystem/fs_types.h"
 
@@ -115,6 +116,29 @@ namespace mlibc
         strcpy(buf->machine, "x86_64");
         strcpy(buf->domainname, "");
         return 0;
+    }
+
+    int sys_thread_setname(void *tcb, const char *name)
+    {
+        Tcb *t = reinterpret_cast<Tcb *>(tcb);
+        long result = syscall_thread_setname(t->tid, name);
+        if (IS_ERR_VALUE(result))
+            return -result;
+        return 0;
+    }
+
+    int sys_thread_getname(void *tcb, char *name, size_t size)
+    {
+        Tcb *t = reinterpret_cast<Tcb *>(tcb);
+        long result = syscall_thread_getname(t->tid, name, size);
+        if (IS_ERR_VALUE(result))
+            return -result;
+        return 0;
+    }
+
+    int sys_gettid()
+    {
+        return syscall_get_tid();
     }
 
 } // namespace mlibc
