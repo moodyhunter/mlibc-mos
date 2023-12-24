@@ -80,29 +80,27 @@ namespace mlibc
     int sys_read_entries(int handle, void *buffer, size_t max_size, size_t *bytes_read)
     {
         MOS_UNUSED(max_size);
-        dir_entry_t next;
+        *bytes_read = syscall_io_read(handle, buffer, max_size);
+        if (IS_ERR_VALUE(*bytes_read))
+            return -static_cast<int>(*bytes_read);
 
-        *bytes_read = syscall_io_read(handle, &next, sizeof(next));
-
-        dirent *const dir = (dirent *) buffer;
-        strcpy(dir->d_name, next.name);
-        dir->d_ino = next.ino;
-        dir->d_off = next.next_offset;
-        dir->d_reclen = sizeof(ino_t) + sizeof(off_t) + sizeof(unsigned short) + sizeof(unsigned char) + strlen(dir->d_name) + 1;
-
-        switch (next.type)
+        // iterate over the buffer and set the d_reclen
+        for (size_t i = 0; i < *bytes_read;)
         {
-            case FILE_TYPE_REGULAR: dir->d_type = DT_REG; break;
-            case FILE_TYPE_DIRECTORY: dir->d_type = DT_DIR; break;
-            case FILE_TYPE_SYMLINK: dir->d_type = DT_LNK; break;
-            case FILE_TYPE_CHAR_DEVICE: dir->d_type = DT_CHR; break;
-            case FILE_TYPE_BLOCK_DEVICE: dir->d_type = DT_BLK; break;
-            case FILE_TYPE_SOCKET: dir->d_type = DT_SOCK; break;
-            case FILE_TYPE_NAMED_PIPE: dir->d_type = DT_FIFO; break;
-            default: dir->d_type = DT_UNKNOWN; break;
+            auto ent = reinterpret_cast<struct dirent *>(reinterpret_cast<uintptr_t>(buffer) + i);
+            switch ((file_type_t) ent->d_type)
+            {
+                case FILE_TYPE_REGULAR: ent->d_type = DT_REG; break;
+                case FILE_TYPE_DIRECTORY: ent->d_type = DT_DIR; break;
+                case FILE_TYPE_SYMLINK: ent->d_type = DT_LNK; break;
+                case FILE_TYPE_CHAR_DEVICE: ent->d_type = DT_CHR; break;
+                case FILE_TYPE_BLOCK_DEVICE: ent->d_type = DT_BLK; break;
+                case FILE_TYPE_NAMED_PIPE: ent->d_type = DT_FIFO; break;
+                case FILE_TYPE_SOCKET: ent->d_type = DT_SOCK; break;
+                case FILE_TYPE_UNKNOWN: ent->d_type = DT_UNKNOWN; break;
+            }
+            i += ent->d_reclen;
         }
-
-        buffer = (void *) ((uintptr_t) buffer + dir->d_reclen);
 
         return 0;
     }
