@@ -747,6 +747,76 @@ namespace mlibc
         return retval;
     }
 
+    int sys_getrlimit(int resource, struct rlimit *limit)
+    {
+        switch (resource)
+        {
+            case RLIMIT_NOFILE:
+                limit->rlim_cur = 256;
+                limit->rlim_max = 256;
+                return 0;
+            case RLIMIT_STACK:
+                limit->rlim_cur = 8388608;
+                limit->rlim_max = 8388608;
+                return 0;
+            case RLIMIT_AS:
+                limit->rlim_cur = 4294967296;
+                limit->rlim_max = 4294967296;
+                return 0;
+            case RLIMIT_CORE:
+                limit->rlim_cur = 0;
+                limit->rlim_max = 0;
+                return 0;
+            case RLIMIT_CPU:
+                limit->rlim_cur = RLIM_INFINITY;
+                limit->rlim_max = RLIM_INFINITY;
+                return 0;
+            case RLIMIT_DATA:
+                limit->rlim_cur = RLIM_INFINITY;
+                limit->rlim_max = RLIM_INFINITY;
+                return 0;
+            case RLIMIT_FSIZE:
+                limit->rlim_cur = RLIM_INFINITY;
+                limit->rlim_max = RLIM_INFINITY;
+                return 0;
+            case RLIMIT_LOCKS:
+                limit->rlim_cur = 0;
+                limit->rlim_max = 0;
+                return 0;
+            case RLIMIT_MEMLOCK:
+                limit->rlim_cur = 65536;
+                limit->rlim_max = 65536;
+                return 0;
+            case RLIMIT_MSGQUEUE:
+                limit->rlim_cur = 819200;
+                limit->rlim_max = 819200;
+                return 0;
+            case RLIMIT_NICE:
+                limit->rlim_cur = 0;
+                limit->rlim_max = 0;
+                return 0;
+            case RLIMIT_NPROC:
+                limit->rlim_cur = 25;
+                limit->rlim_max = 25;
+                return 0;
+            case RLIMIT_RSS:
+                limit->rlim_cur = RLIM_INFINITY;
+                limit->rlim_max = RLIM_INFINITY;
+                return 0;
+            case RLIMIT_RTPRIO:
+                limit->rlim_cur = 0;
+                limit->rlim_max = 0;
+                return 0;
+            case RLIMIT_SIGPENDING:
+                limit->rlim_cur = 819200;
+                limit->rlim_max = 819200;
+                return 0;
+            default: return EINVAL;
+        }
+
+        return 0;
+    }
+
     int sys_fchmodat(int fd, const char *pathname, mode_t mode, int flags)
     {
         int mos_mode = 0;
@@ -783,4 +853,9 @@ namespace mlibc
         return sys_fchmodat(FD_CWD, pathname, mode, 0);
     }
 
+    int sys_umask(mode_t mode, mode_t *old)
+    {
+        mlibc::infoLogger() << "stub sys_umask: " << mode << frg::endlog;
+        return 0;
+    }
 } // namespace mlibc
