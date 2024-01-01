@@ -100,7 +100,7 @@ static open_flags get_open_flags(int flags, int mode)
     if (flags & O_NOFOLLOW)
         mos_flags |= OPEN_NO_FOLLOW;
 
-    if (mode & O_CREAT)
+    if (flags & O_CREAT)
         mos_flags |= OPEN_CREATE;
 
     if (flags & O_TRUNC)
