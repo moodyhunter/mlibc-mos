@@ -710,7 +710,77 @@ namespace mlibc
 
     int sys_access(const char *path, int mode)
     {
-        mlibc::infoLogger() << "stub sys_access: " << path << ", " << mode << frg::endlog;
+        int retval = 0;
+        stat st;
+        if (sys_stat(fsfd_target::path, FD_CWD, path, 0, &st))
+        {
+            retval = 1;
+            goto done;
+        }
+
+        if (mode & R_OK)
+        {
+            if (!(st.st_mode & S_IRUSR || st.st_mode & S_IRGRP || st.st_mode & S_IROTH))
+            {
+                retval = 1;
+                goto done;
+            }
+        }
+        if (mode & W_OK)
+        {
+            if (!(st.st_mode & S_IWUSR || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH))
+            {
+                retval = 1;
+                goto done;
+            }
+        }
+        if (mode & X_OK)
+        {
+            if (!(st.st_mode & S_IXUSR || st.st_mode & S_IXGRP || st.st_mode & S_IXOTH))
+            {
+                retval = 1;
+                goto done;
+            }
+        }
+
+    done:
+        return retval;
+    }
+
+    int sys_fchmodat(int fd, const char *pathname, mode_t mode, int flags)
+    {
+        int mos_mode = 0;
+        if (mode & S_IRUSR)
+            mos_mode |= PERM_OWNER & PERM_READ;
+        if (mode & S_IWUSR)
+            mos_mode |= PERM_OWNER & PERM_WRITE;
+        if (mode & S_IXUSR)
+            mos_mode |= PERM_OWNER & PERM_EXEC;
+        if (mode & S_IRGRP)
+            mos_mode |= PERM_GROUP & PERM_READ;
+        if (mode & S_IWGRP)
+            mos_mode |= PERM_GROUP & PERM_WRITE;
+        if (mode & S_IXGRP)
+            mos_mode |= PERM_GROUP & PERM_EXEC;
+        if (mode & S_IROTH)
+            mos_mode |= PERM_OTHER & PERM_READ;
+        if (mode & S_IWOTH)
+            mos_mode |= PERM_OTHER & PERM_WRITE;
+        if (mode & S_IXOTH)
+            mos_mode |= PERM_OTHER & PERM_EXEC;
+
+        // SUID, SGID, and sticky bits are not supported
+
+        long ret = syscall_vfs_fchmodat(fd, pathname, mos_mode, 0);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
+
         return 0;
     }
+
+    int sys_chmod(const char *pathname, mode_t mode)
+    {
+        return sys_fchmodat(FD_CWD, pathname, mode, 0);
+    }
+
 } // namespace mlibc
