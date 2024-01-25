@@ -9,12 +9,12 @@
 #include "mlibc/tcb.hpp"
 #include "mos/filesystem/fs_types.h"
 
-#include <cerrno>
 #include <cstdint>
-#include <cstring>
 #include <dirent.h>
+#include <errno.h>
 #include <mos/mos_global.h>
 #include <mos/syscall/usermode.h>
+#include <string.h>
 #include <sys/mman.h>
 
 extern "C" void __mlibc_start_thread(void *);
