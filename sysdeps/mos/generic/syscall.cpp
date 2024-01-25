@@ -43,6 +43,7 @@ static constexpr inline bool no_log = false;
 DEFINE_ENUM_FLAG_OPERATORS(mem_perm_t);
 DEFINE_ENUM_FLAG_OPERATORS(open_flags);
 DEFINE_ENUM_FLAG_OPERATORS(mmap_flags_t);
+DEFINE_ENUM_FLAG_OPERATORS(fd_flags_t);
 
 static mmap_flags_t get_mmap_flags(int flags)
 {
@@ -378,7 +379,9 @@ namespace mlibc
 
     int sys_chdir(const char *path)
     {
-        syscall_vfs_chdir(path);
+        long ret = syscall_vfs_chdir(path);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
         return 0;
     }
 
@@ -390,13 +393,17 @@ namespace mlibc
 
     int sys_mkdir(const char *path, mode_t mode)
     {
-        syscall_vfs_mkdir(path);
+        long ret = syscall_vfs_mkdir(path);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
         return 0;
     }
 
     int sys_link(const char *old_path, const char *new_path)
     {
-        syscall_vfs_symlink(old_path, new_path);
+        long ret = syscall_vfs_symlink(old_path, new_path);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
         return 0;
     }
 
@@ -408,7 +415,11 @@ namespace mlibc
 
     int sys_pread(int fd, void *buf, size_t n, off_t off, ssize_t *bytes_read)
     {
-        mlibc::infoLogger() << "stub sys_pread: " << fd << frg::endlog;
+        long ret = syscall_io_pread(fd, buf, n, off);
+        if (IS_ERR_VALUE(ret))
+            return -ret;
+
+        *bytes_read = ret;
         return 0;
     }
 
@@ -693,8 +704,12 @@ namespace mlibc
 
     int sys_pipe(int *fds, int flags)
     {
+        fd_flags_t mos_flags = {};
+        if (flags & O_CLOEXEC)
+            mos_flags |= FD_FLAGS_CLOEXEC;
+
         fd_t read_fd, write_fd;
-        long ret = syscall_pipe(&read_fd, &write_fd);
+        long ret = syscall_pipe(&read_fd, &write_fd, mos_flags);
         if (IS_ERR_VALUE(ret))
             return -ret;
 
