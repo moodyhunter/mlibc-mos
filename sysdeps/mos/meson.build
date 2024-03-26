@@ -1,4 +1,4 @@
-rtdl_sources += files(
+rtld_sources += files(
 	'generic/syscall.cpp',
 )
 
