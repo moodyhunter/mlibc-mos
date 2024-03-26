@@ -259,7 +259,7 @@ elif host_machine.system() == 'dripos'
 	subdir('sysdeps/dripos')
 elif host_machine.system() == 'mos'
     disable_linux_option = true
-    rtdl_include_dirs += include_directories('sysdeps/mos/include')
+    rtld_include_dirs += include_directories('sysdeps/mos/include')
     libc_include_dirs += include_directories('sysdeps/mos/include')
 
     if mos_kernel_headers == ''
@@ -271,7 +271,7 @@ elif host_machine.system() == 'mos'
         error('mos_kernel_headers is not set to a valid path')
     endif
 
-    rtdl_include_dirs += include_directories(mos_kernel_headers)
+    rtld_include_dirs += include_directories(mos_kernel_headers)
     libc_include_dirs += include_directories(mos_kernel_headers)
 
     subdir('sysdeps/mos')
