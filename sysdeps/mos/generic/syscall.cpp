@@ -1,11 +1,8 @@
-#include "abi-bits/errno.h"
 #include "abi-bits/fcntl.h"
 #include "abi-bits/gid_t.h"
 #include "abi-bits/seek-whence.h"
 #include "abi-bits/uid_t.h"
 #include "abi-bits/vm-flags.h"
-#include "bits/null.h"
-#include "mlibc/all-sysdeps.hpp"
 #include "mlibc/ansi-sysdeps.hpp"
 #include "mlibc/debug.hpp"
 #include "mlibc/fsfd_target.hpp"
@@ -13,11 +10,13 @@
 #include "mos/filesystem/fs_types.h"
 #include "mos/io/io_types.h"
 #include "mos/mm/mm_types.h"
-#include "mos/syscall/number.h"
 #include "mos/tasks/signal_types.h"
 #include "mos/types.h"
 
 #include <dirent.h>
+#include <errno.h>
+#include <limits.h>
+#include <mlibc/all-sysdeps.hpp>
 #include <mos/syscall/usermode.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -695,8 +694,7 @@ namespace mlibc
             case _SC_CHILD_MAX: return 25;
             case _SC_JOB_CONTROL: return 1;     // NO JOB CONTROL
             case _SC_NGROUPS_MAX: return 65536; // On linux, it is defined to 65536 in most cases, so define it to be 65536
-            case _SC_RE_DUP_MAX: return RE_DUP_MAX;
-            case _SC_LINE_MAX: return 2048; // Linux defines it as 2048.
+            case _SC_LINE_MAX: return 2048;     // Linux defines it as 2048.
             case _SC_NPROCESSORS_CONF:
             default: return -EINVAL;
         }
