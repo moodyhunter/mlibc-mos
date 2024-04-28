@@ -51,6 +51,8 @@ if not no_headers
 		'include/abi-bits/statfs.h',
 		'include/abi-bits/statvfs.h',
 		'include/abi-bits/ioctls.h',
+		'include/abi-bits/xattr.h',
+		'include/abi-bits/msg.h',
 		subdir: 'abi-bits'
 	)
 
