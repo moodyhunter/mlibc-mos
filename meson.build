@@ -264,7 +264,7 @@ elif host_machine.system() == 'mos'
 
     if mos_kernel_headers == ''
         message('mos_kernel_headers is not set, defaulting to /opt/x86_64-mos/include')
-        mos_kernel_headers = '/opt/x86_64-mos/include'
+        mos_kernel_headers = '/opt/' + host_machine.cpu_family() + '-mos/include'
     endif
 
     if not fs.is_dir(mos_kernel_headers)
