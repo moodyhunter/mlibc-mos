@@ -6,7 +6,7 @@ libc_sources += files(
 	'generic/syscall.cpp',
 	'generic/entry.cpp',
 	'generic/syscall_libc.cpp',
-	'x86_64/thread_entry.S'
+	host_machine.cpu_family() / 'thread_entry.S'
 )
 
 if not no_headers
@@ -76,16 +76,14 @@ if not headers_only
 		install_dir: get_option('libdir')
 	)
 
-	if host_machine.cpu_family() == 'x86_64'
-		crt_pie = custom_target('Scrt0',
-			build_by_default: true,
-			command: c_compiler.cmd_array() + ['-fPIE', '-c', '-o', '@OUTPUT@', '@INPUT@'],
-			input: host_machine.cpu_family() / 'crt-src/Scrt0.S',
-			output: 'Scrt0.o',
-			install: true,
-			install_dir: get_option('libdir')
-		)
-	endif
+	crt_pie = custom_target('Scrt0',
+		build_by_default: true,
+		command: c_compiler.cmd_array() + ['-fPIE', '-c', '-o', '@OUTPUT@', '@INPUT@'],
+		input: host_machine.cpu_family() / 'crt-src/Scrt0.S',
+		output: 'Scrt0.o',
+		install: true,
+		install_dir: get_option('libdir')
+	)
 
 	custom_target('crti',
 		build_by_default: true,
