@@ -136,7 +136,14 @@ namespace mlibc
 
     int sys_tcb_set(void *pointer)
     {
+#if defined(__x86_64__)
         syscall_arch_syscall(X86_SYSCALL_SET_FS_BASE, (ptr_t) pointer, 0, 0, 0);
+#elif defined(__riscv) && __riscv_xlen == 64
+        sys_libc_log("sys_tcb_set: not implemented for riscv64");
+        sys_libc_panic();
+#else
+#error "Unsupported architecture"
+#endif
         return 0;
     }
 
@@ -544,8 +551,11 @@ namespace mlibc
 
     noreturn static __attribute__((naked)) void sigreturn_trampoline(void)
     {
+        // move stack pointer to a0 and jump to syscall_signal_return
 #if defined(__x86_64__)
         __asm__ volatile("movq %%rsp, %%rdi\ncall *%0\n" ::"a"(syscall_signal_return));
+#elif defined(__riscv) && __riscv_xlen == 64
+        __asm__ volatile("unimp"); // TODO: Implement this
 #else
 #error "Unsupported architecture"
 #endif
