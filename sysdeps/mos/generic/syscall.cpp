@@ -29,6 +29,13 @@ static constexpr inline bool no_log = false;
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+#define VERIFY_RET(ret)                                                                                                                                                  \
+    do                                                                                                                                                                   \
+    {                                                                                                                                                                    \
+        if (IS_ERR_VALUE(ret))                                                                                                                                           \
+            return -ret;                                                                                                                                                 \
+    } while (0)
+
 #define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE)                                                                                                                             \
     inline ENUMTYPE operator|(ENUMTYPE a, ENUMTYPE b)                                                                                                                    \
     {                                                                                                                                                                    \
@@ -155,8 +162,7 @@ namespace mlibc
     int sys_futex_wait(int *pointer, int expected, const struct timespec *time)
     {
         long ret = syscall_futex_wait(pointer, expected);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         return 0;
     }
@@ -164,17 +170,14 @@ namespace mlibc
     int sys_futex_wake(int *pointer)
     {
         long ret = syscall_futex_wake(pointer, INT_MAX);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         return 0;
     }
 
     int sys_anon_allocate(size_t size, void **pointer)
     {
         long ptr = (long) syscall_mmap_anonymous(0, size, MEM_PERM_READ | MEM_PERM_WRITE, MMAP_PRIVATE);
-        if (IS_ERR_VALUE(ptr))
-            return -ptr;
-
+        VERIFY_RET(ptr);
         *pointer = (void *) ptr;
         return 0;
     }
@@ -187,8 +190,7 @@ namespace mlibc
     int sys_open(const char *pathname, int flags, mode_t mode, int *fd)
     {
         long ret = syscall_vfs_openat(FD_CWD, pathname, get_open_flags(flags, mode));
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         *fd = ret;
         return 0;
     }
@@ -196,8 +198,7 @@ namespace mlibc
     int sys_openat(int dirfd, const char *path, int flags, mode_t mode, int *fd)
     {
         long ret = syscall_vfs_openat(dirfd, path, get_open_flags(flags, mode));
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         *fd = ret;
         return 0;
     }
@@ -205,8 +206,7 @@ namespace mlibc
     int sys_read(int fd, void *buf, size_t count, ssize_t *bytes_read)
     {
         long ret = syscall_io_read(fd, buf, count);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         *bytes_read = ret;
         return 0;
@@ -215,8 +215,7 @@ namespace mlibc
     int sys_readv(int fd, const struct iovec *iovs, int iovc, ssize_t *bytes_read)
     {
         long ret = syscall_io_readv(fd, iovs, iovc);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         *bytes_read = ret;
         return 0;
@@ -256,14 +255,12 @@ namespace mlibc
         if (fsfdt == fsfd_target::fd)
         {
             long ret = syscall_vfs_fstatat(fd, NULL, &mos_stat, fstatat_flags::FSTATAT_FILE);
-            if (IS_ERR_VALUE(ret))
-                return -ret;
+            VERIFY_RET(ret);
         }
         else if (fsfdt == fsfd_target::path)
         {
             long ret = syscall_vfs_fstatat(FD_CWD, path, &mos_stat, fstatat_flags::FSTATAT_NONE);
-            if (IS_ERR_VALUE(ret))
-                return -ret;
+            VERIFY_RET(ret);
         }
         else
         {
@@ -386,8 +383,7 @@ namespace mlibc
     int sys_chdir(const char *path)
     {
         long ret = syscall_vfs_chdir(path);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         return 0;
     }
 
@@ -400,16 +396,14 @@ namespace mlibc
     int sys_mkdir(const char *path, mode_t mode)
     {
         long ret = syscall_vfs_mkdir(path);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         return 0;
     }
 
     int sys_link(const char *old_path, const char *new_path)
     {
         long ret = syscall_vfs_symlink(old_path, new_path);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         return 0;
     }
 
@@ -422,8 +416,7 @@ namespace mlibc
     int sys_pread(int fd, void *buf, size_t n, off_t off, ssize_t *bytes_read)
     {
         long ret = syscall_io_pread(fd, buf, n, off);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         *bytes_read = ret;
         return 0;
@@ -433,8 +426,7 @@ namespace mlibc
     {
         struct timespec ts;
         long ret = syscall_clock_gettimeofday(&ts);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         *secs = ts.tv_sec;
         *nanos = ts.tv_nsec;
@@ -582,8 +574,7 @@ namespace mlibc
     int sys_fork(pid_t *child)
     {
         long ret = syscall_fork();
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         *child = ret;
         return 0;
     }
@@ -591,8 +582,7 @@ namespace mlibc
     int sys_waitpid(pid_t pid, int *status, int flags, struct rusage *ru, pid_t *ret_pid)
     {
         long retpid = syscall_wait_for_process(pid, (u32 *) status, flags);
-        if (IS_ERR_VALUE(retpid))
-            return -retpid;
+        VERIFY_RET(retpid);
         *ret_pid = retpid;
         return 0;
     }
@@ -600,8 +590,7 @@ namespace mlibc
     int sys_execve(const char *path, char *const argv[], char *const envp[])
     {
         long ret = syscall_execveat(FD_CWD, path, argv, envp, 0);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         return 0;
     }
 
@@ -613,8 +602,7 @@ namespace mlibc
     int sys_kill(int pid, int sig)
     {
         long ret = syscall_signal_process(pid, sig);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         return 0;
     }
@@ -622,8 +610,7 @@ namespace mlibc
     int sys_poll(struct pollfd *fds, nfds_t count, int timeout, int *num_events)
     {
         long ret = syscall_io_poll(fds, count, timeout);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         *num_events = ret;
         return 0;
     }
@@ -675,8 +662,7 @@ namespace mlibc
     {
         MOS_UNUSED(flags);
         long ret = syscall_io_dup(fd);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         *newfd = ret;
         return 0;
     }
@@ -685,8 +671,7 @@ namespace mlibc
     {
         MOS_UNUSED(flags);
         long ret = syscall_io_dup2(fd, newfd);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
         return 0;
     }
 
@@ -718,8 +703,7 @@ namespace mlibc
 
         fd_t read_fd, write_fd;
         long ret = syscall_pipe(&read_fd, &write_fd, mos_flags);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         fds[0] = read_fd;
         fds[1] = write_fd;
@@ -865,8 +849,7 @@ namespace mlibc
         // SUID, SGID, and sticky bits are not supported
 
         long ret = syscall_vfs_fchmodat(fd, pathname, mos_mode, 0);
-        if (IS_ERR_VALUE(ret))
-            return -ret;
+        VERIFY_RET(ret);
 
         return 0;
     }
