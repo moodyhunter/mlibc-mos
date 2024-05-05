@@ -502,7 +502,7 @@ namespace mlibc
 
     pid_t sys_getpgid(pid_t pid, pid_t *pgid)
     {
-        *pgid = pid;
+        *pgid = pid; // For now, we don't support process groups
         return 0;
     }
 
@@ -690,7 +690,6 @@ namespace mlibc
             case _SC_JOB_CONTROL: return 1;     // NO JOB CONTROL
             case _SC_NGROUPS_MAX: return 65536; // On linux, it is defined to 65536 in most cases, so define it to be 65536
             case _SC_LINE_MAX: return 2048;     // Linux defines it as 2048.
-            case _SC_NPROCESSORS_CONF:
             default: return -EINVAL;
         }
     }
@@ -701,12 +700,8 @@ namespace mlibc
         if (flags & O_CLOEXEC)
             mos_flags |= FD_FLAGS_CLOEXEC;
 
-        fd_t read_fd, write_fd;
-        long ret = syscall_pipe(&read_fd, &write_fd, mos_flags);
+        long ret = syscall_pipe(&fds[0], &fds[1], mos_flags);
         VERIFY_RET(ret);
-
-        fds[0] = read_fd;
-        fds[1] = write_fd;
         return 0;
     }
 
