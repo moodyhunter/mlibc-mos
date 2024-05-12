@@ -258,12 +258,12 @@ elif host_machine.system() == 'dripos'
 	libc_include_dirs += include_directories('sysdeps/dripos/include')
 	subdir('sysdeps/dripos')
 elif host_machine.system() == 'mos'
-    disable_linux_option = true
+    disable_linux_option = false # MOS needs Linux sysdeps
     rtld_include_dirs += include_directories('sysdeps/mos/include')
     libc_include_dirs += include_directories('sysdeps/mos/include')
 
     if mos_kernel_headers == ''
-        message('mos_kernel_headers is not set, defaulting to /opt/x86_64-mos/include')
+        message('mos_kernel_headers is not set, defaulting to /opt/' + host_machine.cpu_family() + '-mos/include')
         mos_kernel_headers = '/opt/' + host_machine.cpu_family() + '-mos/include'
     endif
 
