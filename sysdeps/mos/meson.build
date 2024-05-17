@@ -6,7 +6,7 @@ libc_sources += files(
 	'generic/syscall.cpp',
 	'generic/entry.cpp',
 	'generic/syscall_libc.cpp',
-	host_machine.cpu_family() / 'thread_entry.S'
+	host_machine.cpu_family() / 'thread_entry.S',
 )
 
 if not no_headers
@@ -17,6 +17,8 @@ if not no_headers
 		'include/abi-bits/errno.h',
 		'include/abi-bits/fcntl.h',
 		'include/abi-bits/in.h',
+		'include/abi-bits/reboot.h',
+		'include/abi-bits/vt.h',
 		'include/abi-bits/resource.h',
 		'include/abi-bits/stat.h',
 		'include/abi-bits/statx.h',
@@ -54,53 +56,54 @@ if not no_headers
 		'include/abi-bits/ioctls.h',
 		'include/abi-bits/xattr.h',
 		'include/abi-bits/msg.h',
-		subdir: 'abi-bits'
+		subdir: 'abi-bits',
 	)
 
-    # should really enable Linux options for these
-    install_headers(
-        'include/sys/sysmacros.h',
-        subdir: 'sys'
-    )
-    install_headers(
-        'include/malloc.h',
-    )
+	# should really enable Linux options for these
+	install_headers('include/sys/sysmacros.h', subdir: 'sys')
+	install_headers(
+		'include/malloc.h',
+	)
 endif
 
 if not headers_only
-	crt = custom_target('crt0',
+	crt = custom_target(
+		'crt0',
 		build_by_default: true,
 		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
 		input: host_machine.cpu_family() / 'crt-src/crt0.S',
 		output: 'crt0.o',
 		install: true,
-		install_dir: get_option('libdir')
+		install_dir: get_option('libdir'),
 	)
 
-	crt_pie = custom_target('Scrt0',
+	crt_pie = custom_target(
+		'Scrt0',
 		build_by_default: true,
 		command: c_compiler.cmd_array() + ['-fPIE', '-c', '-o', '@OUTPUT@', '@INPUT@'],
 		input: host_machine.cpu_family() / 'crt-src/Scrt0.S',
 		output: 'Scrt0.o',
 		install: true,
-		install_dir: get_option('libdir')
+		install_dir: get_option('libdir'),
 	)
 
-	custom_target('crti',
+	custom_target(
+		'crti',
 		build_by_default: true,
 		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
 		input: host_machine.cpu_family() / 'crt-src/crti.S',
 		output: 'crti.o',
 		install: true,
-		install_dir: get_option('libdir')
+		install_dir: get_option('libdir'),
 	)
 
-	custom_target('crtn',
+	custom_target(
+		'crtn',
 		build_by_default: true,
 		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
 		input: host_machine.cpu_family() / 'crt-src/crtn.S',
 		output: 'crtn.o',
 		install: true,
-		install_dir: get_option('libdir')
+		install_dir: get_option('libdir'),
 	)
 endif
