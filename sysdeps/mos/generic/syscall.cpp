@@ -557,7 +557,11 @@ namespace mlibc
     {
         if (sigact)
         {
-            sigaction_t mos_sigact = *sigact;
+            sigaction_t mos_sigact = {
+                .handler = sigact->sa_handler,
+                .sa_flags = sigact->sa_flags,
+                .sa_restorer = sigact->sa_restorer,
+            };
             if (!(sigact->sa_flags & SA_RESTORER))
             {
                 mos_sigact.sa_restorer = sigreturn_trampoline;
