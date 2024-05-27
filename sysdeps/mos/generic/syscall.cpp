@@ -863,4 +863,19 @@ namespace mlibc
         mlibc::infoLogger() << "stub sys_umask: " << mode << frg::endlog;
         return 0;
     }
+
+    int sys_symlink(const char *target_path, const char *link_path)
+    {
+        long ret = syscall_vfs_symlink(target_path, link_path);
+        VERIFY_RET(ret);
+        return 0;
+    }
+
+    int sys_readlink(const char *pathname, char *buffer, size_t size)
+    {
+        long ret = syscall_vfs_readlinkat(FD_CWD, pathname, buffer, size);
+        VERIFY_RET(ret);
+        return 0;
+    }
+
 } // namespace mlibc
