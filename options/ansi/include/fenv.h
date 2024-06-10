@@ -12,7 +12,7 @@ extern "C" {
 typedef struct {
 	__mlibc_uint32 __control_word;
 	__mlibc_uint32 __status_word;
-	__mlibc_uint32 __unused[5];
+	__mlibc_uint32 __unused_var[5];
 	__mlibc_uint32 __mxcsr;
 } fenv_t;
 

@@ -67,12 +67,12 @@ struct dl_find_object {
 #if DLFO_STRUCT_HAS_EH_DBASE
 	void *dlfo_eh_dbase;
 #if __UINTPTR_WIDTH__ == 32
-	unsigned int __unused0;
+	unsigned int __unused_var0;
 #endif
 #endif
 #if DLFO_STRUCT_HAS_EH_COUNT
 	int dlfo_eh_count;
-	unsigned int __unused1;
+	unsigned int __unused_var1;
 #endif
 	unsigned long long __dlfo_unused[7];
 };

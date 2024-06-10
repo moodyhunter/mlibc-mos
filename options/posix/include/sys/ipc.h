@@ -39,7 +39,7 @@ struct ipc64_perm {
 	mode_t mode;
 	short __ipc_perm_seq;
 	short __pad;
-	unsigned long __unused[2];
+	unsigned long __unused_var[2];
 };
 
 #define ipc_perm ipc64_perm

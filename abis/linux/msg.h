@@ -32,7 +32,7 @@ struct msqid64_ds {
 	msglen_t msg_qbytes;
 	pid_t msg_lspid;
 	pid_t msg_lrpid;
-	unsigned long __unused[2];
+	unsigned long __unused_var[2];
 };
 
 #define msqid_ds msqid64_ds

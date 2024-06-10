@@ -64,7 +64,7 @@ struct shminfo {
 	unsigned long shmmni;
 	unsigned long shmseg;
 	unsigned long shmall;
-	unsigned long __unused[4];
+	unsigned long __unused_var[4];
 };
 
 #ifndef __MLIBC_ABI_ONLY
