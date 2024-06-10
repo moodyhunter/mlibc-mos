@@ -63,7 +63,7 @@ struct stat {
 	struct timespec st_atim;
 	struct timespec st_mtim;
 	struct timespec st_ctim;
-	long __unused[3];
+	long __unused_var[3];
 };
 
 #elif (defined(__riscv) && __riscv_xlen == 64) || defined (__aarch64__)

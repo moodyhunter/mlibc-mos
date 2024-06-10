@@ -400,7 +400,7 @@ typedef struct __ucontext {
 	struct ucontext	*uc_link;
 	stack_t uc_stack;
 	sigset_t uc_sigmask;
-	uint8_t  __unused[1024 / 8 - sizeof(sigset_t)];
+	uint8_t  __unused_var[1024 / 8 - sizeof(sigset_t)];
 	mcontext_t uc_mcontext;
 } ucontext_t;
 
