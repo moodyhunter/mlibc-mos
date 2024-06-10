@@ -25,7 +25,7 @@ struct utmpx {
 	int ut_session, __ut_pad2;
 	struct timeval ut_tv;
 	unsigned ut_addr_v6[4];
-	char __unused[20];
+	char __unused_var[20];
 };
 
 #define e_exit __e_exit
