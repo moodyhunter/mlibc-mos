@@ -139,4 +139,12 @@ namespace mlibc
         return syscall_get_tid();
     }
 
+    int sys_memfd_create(const char *name, int flags, int *fd){
+        long result = syscall_memfd_create(name, flags);
+        if (IS_ERR_VALUE(result))
+            return -result;
+        *fd = result;
+        return 0;
+    }
+
 } // namespace mlibc
