@@ -382,7 +382,7 @@ namespace mlibc
 
     int sys_chdir(const char *path)
     {
-        long ret = syscall_vfs_chdir(path);
+        long ret = syscall_vfs_chdirat(FD_CWD, path);
         VERIFY_RET(ret);
         return 0;
     }
@@ -519,7 +519,11 @@ namespace mlibc
 
     int sys_unlinkat(int dirfd, const char *path, int flags)
     {
-        mlibc::infoLogger() << "stub sys_unlinkat: " << path << frg::endlog;
+        MOS_UNUSED(flags);
+        if (dirfd == AT_FDCWD)
+            dirfd = FD_CWD;
+        long ret = syscall_vfs_unlinkat(dirfd, path);
+        VERIFY_RET(ret);
         return 0;
     }
 
