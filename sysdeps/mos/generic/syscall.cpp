@@ -10,6 +10,7 @@
 #include "mos/filesystem/fs_types.h"
 #include "mos/io/io_types.h"
 #include "mos/mm/mm_types.h"
+#include "mos/syscall/number.h"
 #include "mos/tasks/signal_types.h"
 #include "mos/types.h"
 
@@ -189,7 +190,7 @@ namespace mlibc
 
     int sys_open(const char *pathname, int flags, mode_t mode, int *fd)
     {
-        long ret = syscall_vfs_openat(FD_CWD, pathname, get_open_flags(flags, mode));
+        long ret = syscall_vfs_openat(AT_FDCWD, pathname, get_open_flags(flags, mode));
         VERIFY_RET(ret);
         *fd = ret;
         return 0;
@@ -259,7 +260,7 @@ namespace mlibc
         }
         else if (fsfdt == fsfd_target::path)
         {
-            long ret = syscall_vfs_fstatat(FD_CWD, path, &mos_stat, fstatat_flags::FSTATAT_NONE);
+            long ret = syscall_vfs_fstatat(AT_FDCWD, path, &mos_stat, fstatat_flags::FSTATAT_NONE);
             VERIFY_RET(ret);
         }
         else
@@ -376,13 +377,13 @@ namespace mlibc
 
     int sys_open_dir(const char *path, int *handle)
     {
-        *handle = syscall_vfs_openat(FD_CWD, path, OPEN_DIR);
+        *handle = syscall_vfs_openat(AT_FDCWD, path, OPEN_DIR);
         return 0;
     }
 
     int sys_chdir(const char *path)
     {
-        long ret = syscall_vfs_chdirat(FD_CWD, path);
+        long ret = syscall_vfs_chdirat(AT_FDCWD, path);
         VERIFY_RET(ret);
         return 0;
     }
@@ -521,7 +522,7 @@ namespace mlibc
     {
         MOS_UNUSED(flags);
         if (dirfd == AT_FDCWD)
-            dirfd = FD_CWD;
+            dirfd = AT_FDCWD;
         long ret = syscall_vfs_unlinkat(dirfd, path);
         VERIFY_RET(ret);
         return 0;
@@ -541,7 +542,8 @@ namespace mlibc
 
     int sys_sigprocmask(int how, const sigset_t *__restrict set, sigset_t *__restrict retrieve)
     {
-        mlibc::infoLogger() << "stub sys_sigprocmask: " << how << frg::endlog;
+        long ret = syscall_signal_mask_op(how, set, retrieve);
+        VERIFY_RET(ret);
         return 0;
     }
 
@@ -597,7 +599,7 @@ namespace mlibc
 
     int sys_execve(const char *path, char *const argv[], char *const envp[])
     {
-        long ret = syscall_execveat(FD_CWD, path, argv, envp, 0);
+        long ret = syscall_execveat(AT_FDCWD, path, argv, envp, 0);
         VERIFY_RET(ret);
         return 0;
     }
@@ -650,7 +652,10 @@ namespace mlibc
 
     int sys_fcntl(int fd, int request, va_list args, int *result)
     {
-        mlibc::infoLogger() << "stub sys_fcntl: " << fd << ", " << request << ", " << args << frg::endlog;
+        void *arg1 = va_arg(args, void *);
+        long ret = syscall_fd_manipulate(fd, request, arg1);
+        VERIFY_RET(ret);
+        *result = ret;
         return 0;
     }
 
@@ -722,7 +727,7 @@ namespace mlibc
     {
         int retval = 0;
         stat st;
-        if (sys_stat(fsfd_target::path, FD_CWD, path, 0, &st))
+        if (sys_stat(fsfd_target::path, AT_FDCWD, path, 0, &st))
         {
             retval = 1;
             goto done;
@@ -859,7 +864,7 @@ namespace mlibc
 
     int sys_chmod(const char *pathname, mode_t mode)
     {
-        return sys_fchmodat(FD_CWD, pathname, mode, 0);
+        return sys_fchmodat(AT_FDCWD, pathname, mode, 0);
     }
 
     int sys_umask(mode_t mode, mode_t *old)
@@ -877,7 +882,7 @@ namespace mlibc
 
     int sys_readlink(const char *pathname, char *buffer, size_t size)
     {
-        long ret = syscall_vfs_readlinkat(FD_CWD, pathname, buffer, size);
+        long ret = syscall_vfs_readlinkat(AT_FDCWD, pathname, buffer, size);
         VERIFY_RET(ret);
         return 0;
     }
