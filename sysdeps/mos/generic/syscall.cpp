@@ -7,9 +7,11 @@
 #include "mlibc/debug.hpp"
 #include "mlibc/fsfd_target.hpp"
 #include "mlibc/posix-sysdeps.hpp"
+#include "mlibc/tcb.hpp"
 #include "mos/filesystem/fs_types.h"
 #include "mos/io/io_types.h"
 #include "mos/mm/mm_types.h"
+#include "mos/platform_syscall.h"
 #include "mos/syscall/number.h"
 #include "mos/tasks/signal_types.h"
 #include "mos/types.h"
@@ -147,8 +149,8 @@ namespace mlibc
 #if defined(__x86_64__)
         syscall_arch_syscall(X86_SYSCALL_SET_FS_BASE, (ptr_t) pointer, 0, 0, 0);
 #elif defined(__riscv) && __riscv_xlen == 64
-        sys_libc_log("sys_tcb_set: not implemented for riscv64");
-        sys_libc_panic();
+        // RISC-V TCB is below the thread pointer
+        syscall_arch_syscall(RISCV64_SYSCALL_SET_TP, (ptr_t) pointer + sizeof(Tcb), 0, 0, 0);
 #else
 #error "Unsupported architecture"
 #endif
