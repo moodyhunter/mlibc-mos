@@ -555,7 +555,10 @@ namespace mlibc
 #if defined(__x86_64__)
         __asm__ volatile("movq %%rsp, %%rdi\ncall *%0\n" ::"a"(syscall_signal_return));
 #elif defined(__riscv) && __riscv_xlen == 64
-        __asm__ volatile("unimp"); // TODO: Implement this
+        __asm__ volatile("mv a0, sp\n"
+                         "mv a7, %0\n"
+                         "ecall\n"
+                         ::"r"(SYSCALL_signal_return));
 #else
 #error "Unsupported architecture"
 #endif
