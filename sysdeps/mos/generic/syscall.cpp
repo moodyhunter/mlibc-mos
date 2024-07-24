@@ -725,6 +725,8 @@ namespace mlibc
 
     int sys_fsync(int fd)
     {
+        long ret = syscall_vfs_fsync(fd, false);
+        VERIFY_RET(ret);
         return 0;
     }
 
