@@ -173,6 +173,10 @@ if default_library_paths.length() == 0
 	else
 		default_library_paths = ['/lib', '/usr/lib']
 	endif
+
+	if target_machine.system() == 'mos'
+		default_library_paths += ['/data/lib']
+	endif
 endif
 
 internal_conf.set_quoted('MLIBC_SYSTEM_NAME', host_machine.system())
