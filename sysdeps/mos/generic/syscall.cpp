@@ -549,7 +549,7 @@ namespace mlibc
         return 0;
     }
 
-    noreturn static __attribute__((naked)) void sigreturn_trampoline(void)
+    [[noreturn]] static __attribute__((naked)) void sigreturn_trampoline(void)
     {
         // move stack pointer to a0 and jump to syscall_signal_return
 #if defined(__x86_64__)
