@@ -882,7 +882,7 @@ namespace mlibc
 
     int sys_symlink(const char *target_path, const char *link_path)
     {
-        long ret = syscall_vfs_symlink(target_path, link_path);
+        long ret = syscall_vfs_symlink(link_path, target_path);
         VERIFY_RET(ret);
         return 0;
     }
