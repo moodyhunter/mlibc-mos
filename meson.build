@@ -284,9 +284,9 @@ elif host_machine.system() == 'mos'
     rtld_include_dirs += include_directories(mos_kernel_headers)
     libc_include_dirs += include_directories(mos_kernel_headers)
 
-    subdir('sysdeps/mos')
     internal_conf.set10('MLIBC_MAP_DSO_SEGMENTS', true)
     internal_conf.set10('MLIBC_MAP_FILE_WINDOWS', true)
+    subdir('sysdeps/mos')
 else
 	error('No sysdeps defined for OS: ' + host_machine.system())
 endif
