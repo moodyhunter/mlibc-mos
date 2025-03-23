@@ -45,7 +45,7 @@ static constexpr inline bool no_log = false;
 DEFINE_ENUM_FLAG_OPERATORS(mem_perm_t);
 DEFINE_ENUM_FLAG_OPERATORS(open_flags);
 DEFINE_ENUM_FLAG_OPERATORS(mmap_flags_t);
-DEFINE_ENUM_FLAG_OPERATORS(fd_flags_t);
+DEFINE_ENUM_FLAG_OPERATORS(FDFlag);
 
 static mmap_flags_t get_mmap_flags(int flags) {
 	mmap_flags_t mos_flags = (mmap_flags_t)0;
@@ -425,7 +425,8 @@ pid_t sys_getpgid(pid_t pid, pid_t *pgid) {
 int sys_setpgid(pid_t pid, pid_t pgid) { return 0; }
 
 int sys_rmdir(const char *path) {
-	mlibc::infoLogger() << "stub sys_rmdir: " << path << frg::endlog;
+	long ret = syscall_vfs_rmdir(path);
+	VERIFY_RET(ret);
 	return 0;
 }
 
@@ -617,7 +618,7 @@ int sys_sysconf(int num, long *ret) {
 }
 
 int sys_pipe(int *fds, int flags) {
-	fd_flags_t mos_flags = {};
+	FDFlag mos_flags = {};
 	if (flags & O_CLOEXEC)
 		mos_flags |= FD_FLAGS_CLOEXEC;
 
