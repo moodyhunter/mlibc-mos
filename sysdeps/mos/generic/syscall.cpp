@@ -26,6 +26,10 @@
 #include <sys/select.h>
 #include <unistd.h>
 
+#if defined(__riscv) && __riscv_xlen == 64
+#include "mlibc/tcb.hpp"
+#endif
+
 static constexpr inline bool no_log = false;
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
