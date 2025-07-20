@@ -46,7 +46,7 @@ int sys_prepare_stack(
     size_t *guard_size,
     void **stack_base
 ) {
-	static constexpr auto default_stacksize = MOS_STACK_PAGES_USER;
+	static constexpr auto default_stacksize = MOS_STACK_PAGES_USER * MOS_PAGE_SIZE;
 	if (!*stack_size)
 		*stack_size = default_stacksize;
 	*guard_size = 0;
@@ -70,9 +70,9 @@ int sys_prepare_stack(
 	return 0;
 }
 
-int sys_clone(void *tcb, pid_t *pid_out, void *stack) {
-	MOS_UNUSED(tcb);
-	pid_t pid = syscall_create_thread("thread", __mlibc_start_thread, NULL, 0, stack);
+int sys_clone(void *pTcb, pid_t *pid_out, void *stack) {
+	Tcb *tcb = reinterpret_cast<Tcb *>(pTcb);
+	pid_t pid = syscall_create_thread("thread", __mlibc_start_thread, NULL, tcb->stackSize, stack);
 	if (pid < 0) {
 		return errno;
 	}
